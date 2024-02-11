@@ -42,7 +42,8 @@ charUI_stats = {
 }
 
 class CharacterStats:
-    SHIRT_SIZES = ["Medium", "Large", "X-Large", "XX-Large", "XXX-Large", "XXXX-Large", "XXXXX-Large"]
+    SHIRT_SIZES = ["Medium", "Large", "X-Large", "2XL", "3XL", "4XL", "5XL", "6XL", "7XL", "8XL", "9XL", "10XL",
+                   "11XL", "12XL", "13XL", "14L", "15XL"]
 
     def __init__(self):
         self.age = 19
@@ -111,7 +112,7 @@ class CharacterStats:
 
         # Update shirt size and fit
         shirt_index = max(0, min(len(self.SHIRT_SIZES) - 1, self.weight_diff // 30))
-        self.shirt_size = self.SHIRT_SIZES[shirt_index]
+        self.shirt_size = self.SHIRT_SIZES[int(shirt_index)]
         if self.weight_diff % 20 <= 10:
             self.shirt_fit = "Loose Fit"
         elif self.weight_diff % 20 <= 15:
@@ -221,11 +222,16 @@ def input_modifier(string, state, is_chat=False):
 def stat_prompt():
     feet, inches = inches_to_feet_and_inches(character_stats.height_inches)
     stats_context = (
-        f"[Today's date is {character_stats.formatted_date()}. {character_stats.name} is now {character_stats.age} years old, "
-        f"{feet}'{inches} inches tall, and currently weighs {character_stats.weight} lbs, so with that her BMI is {character_stats.calculate_bmi()} "
-        f"and she has gained {int(character_stats.weight_diff)} lbs since {character_stats.start_date.strftime('%B %d, %Y')}. "
-        f"So far she has consumed {int(character_stats.current_calories)} out of {character_stats.max_calories} calories today, "
-        f"leaving her feeling {character_stats.fullness}.] "
+        f"""
+        [Today's date is {character_stats.formatted_date()}.]
+        
+        [{character_stats.name}'s Stats:
+        {character_stats.name} is now {character_stats.age} years old, {feet}'{inches} inches tall, and currently weighs {character_stats.weight} lbs.
+        Her BMI is {character_stats.calculate_bmi()} and she has gained {int(character_stats.weight_diff)} lbs since {character_stats.start_date.strftime('%B %d, %Y')}.
+        So far she has consumed {int(character_stats.current_calories)} out of {character_stats.max_calories} calories today, leaving her feeling {character_stats.fullness}.
+        She currently wears a sized {character_stats.shirt_size} shirt, which is a {character_stats.shirt_fit}.
+        She has a pant size of {character_stats.pant_size} US women's, which are a {character_stats.pant_fit}.]
+        """
     )
     return stats_context
 
