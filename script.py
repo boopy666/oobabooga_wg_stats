@@ -228,7 +228,7 @@ def stat_prompt():
         [{character_stats.name}'s Stats:
         {character_stats.name} is now {character_stats.age} years old, {feet}'{inches} inches tall, and currently weighs {character_stats.weight} lbs.
         Her BMI is {character_stats.calculate_bmi()} and she has gained {int(character_stats.weight_diff)} lbs since {character_stats.start_date.strftime('%B %d, %Y')}.
-        So far she has consumed {int(character_stats.current_calories)} out of {character_stats.max_calories} calories today, leaving her feeling {character_stats.fullness}.
+        So far she has consumed {int(character_stats.current_calories)} out of {character_stats.max_calories} calories today, leaving her feeling {character_stats.calculate_fullness()}.
         She currently wears a sized {character_stats.shirt_size} shirt, which is a {character_stats.shirt_fit}.
         She has a pant size of {character_stats.pant_size} US women's, which are a {character_stats.pant_fit}.]
         """
