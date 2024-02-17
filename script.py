@@ -48,11 +48,11 @@ class CharacterStats:
     def __init__(self):
         self.age = 19
         self.name = "Maddy"
-        self.weight = 170  # lbs
-        self.start_weight = 170
+        self.weight = 230  # lbs
+        self.start_weight = 145
         self.height_inches = 67  # 5'7"
         self.current_calories = 0
-        self.max_calories = 1620
+        self.max_calories = 2100
         self.fullness = "Starving"
         self.current_date = datetime.datetime(2016, 6, 15)
         self.start_date = datetime.datetime(2016, 6, 15)
@@ -122,10 +122,10 @@ class CharacterStats:
 
         # Update pant size and fit
         self.pant_size = 14 + (
-                    max(0, self.weight_diff // 15) * 2)  # Start from size 14 and increment by 2 for every 15 lbs
-        if self.weight_diff % 15 <= 5:
+                    max(0, self.weight_diff // 20) * 2)  # Start from size 14 and increment by 2 for every 15 lbs
+        if self.weight_diff % 20 <= 5:
             self.pant_fit = "Loose Fit"
-        elif self.weight_diff % 15 <= 10:
+        elif self.weight_diff % 20 <= 10:
             self.pant_fit = "Standard Fit"
         else:
             self.pant_fit = "Tight Fit"
