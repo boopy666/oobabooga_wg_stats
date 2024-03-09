@@ -26,7 +26,7 @@ charUI_stats = {
     "inject": False,
     "char_name": "Maddy",
     "starting_weight": 170,
-    "char_weight": 170,
+    "char_weight": 240,
     "char_calories": 0,
     "char_height": 67,
     "char_birth_year": 1997,
@@ -48,7 +48,7 @@ class CharacterStats:
     def __init__(self):
         self.age = 19
         self.name = "Maddy"
-        self.weight = 230  # lbs
+        self.weight = 240  # lbs
         self.start_weight = 145
         self.height_inches = 67  # 5'7"
         self.current_calories = 0
