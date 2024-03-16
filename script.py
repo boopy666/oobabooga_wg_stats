@@ -26,18 +26,18 @@ charUI_stats = {
     "inject": False,
     "char_name": "Maddy",
     "starting_weight": 170,
-    "char_weight": 240,
+    "char_weight": 170,
     "char_calories": 0,
     "char_height": 67,
     "char_birth_year": 1997,
-    "char_birth_month": 2,
-    "char_birth_day": 23,
+    "char_birth_month": 5,
+    "char_birth_day": 13,
     "start_year": 2016,
-    "start_month": 6,
-    "start_day": 15,
+    "start_month": 9,
+    "start_day": 2,
     "current_year": 2016,
-    "current_month": 6,
-    "current_day": 15,
+    "current_month": 9,
+    "current_day": 2,
     "stat_prompt": False
 }
 
@@ -48,8 +48,8 @@ class CharacterStats:
     def __init__(self):
         self.age = 19
         self.name = "Maddy"
-        self.weight = 240  # lbs
-        self.start_weight = 145
+        self.weight = 170  # lbs
+        self.start_weight = 170
         self.height_inches = 67  # 5'7"
         self.current_calories = 0
         self.max_calories = 2100
@@ -229,8 +229,7 @@ def stat_prompt():
         {character_stats.name} is now {character_stats.age} years old, {feet}'{inches} inches tall, and currently weighs {character_stats.weight} lbs.
         Her BMI is {character_stats.calculate_bmi()} and she has gained {int(character_stats.weight_diff)} lbs since {character_stats.start_date.strftime('%B %d, %Y')}.
         So far she has consumed {int(character_stats.current_calories)} out of {character_stats.max_calories} calories today, leaving her feeling {character_stats.calculate_fullness()}.
-        She currently wears a sized {character_stats.shirt_size} shirt, which is a {character_stats.shirt_fit}.
-        She has a pant size of {character_stats.pant_size} US women's, which are a {character_stats.pant_fit}.]
+        She currently wears a sized {character_stats.shirt_size} shirt, and has a pant size of {character_stats.pant_size} US women's.]
         """
     )
     return stats_context
