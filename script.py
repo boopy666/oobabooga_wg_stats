@@ -1,19 +1,21 @@
-import datetime
-import re
+import datetime, re, os, sys, io, base64, hashlib, json
 import gradio as gr
-import os
-import sys
+from PIL import Image
+from transformers import pipeline
 
 # Find the path to the 'modules' directory relative to the current file
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)  # Move up to the 'extensions' directory
 base_dir = os.path.dirname(parent_dir)  # Move up to the base 'text-generation-webui' directory
 modules_path = os.path.join(base_dir, 'modules')
+images_dir = os.path.join(current_dir, 'images')
 
 if modules_path not in sys.path:
     sys.path.append(modules_path)
 
 from chat import generate_chat_prompt
+
+model = pipeline(model="seara/rubert-base-cased-ru-go-emotions")
 
 # extension parameters
 params = {
@@ -30,16 +32,17 @@ charUI_stats = {
     "char_calories": 0,
     "char_height": 67,
     "char_birth_year": 1997,
-    "char_birth_month": 5,
-    "char_birth_day": 13,
+    "char_birth_month": 2,
+    "char_birth_day": 23,
     "start_year": 2016,
-    "start_month": 9,
-    "start_day": 2,
+    "start_month": 6,
+    "start_day": 15,
     "current_year": 2016,
-    "current_month": 9,
-    "current_day": 2,
+    "current_month": 6,
+    "current_day": 15,
     "stat_prompt": False
 }
+
 
 class CharacterStats:
     SHIRT_SIZES = ["Medium", "Large", "X-Large", "2XL", "3XL", "4XL", "5XL", "6XL", "7XL", "8XL", "9XL", "10XL",
@@ -52,13 +55,23 @@ class CharacterStats:
         self.start_weight = 170
         self.height_inches = 67  # 5'7"
         self.current_calories = 0
-        self.max_calories = 2100
-        self.fullness = "Starving"
+        self.max_calories = self.calculate_bmr()
+        self.fullness = self.calculate_fullness()
+        self.fullness_percentage = 0
         self.current_date = datetime.datetime(2016, 6, 15)
         self.start_date = datetime.datetime(2016, 6, 15)
         self.update_clothing_sizes()
         self.birthday = datetime.datetime(1997, 2, 23)
         self.inject_stats = False  # Default value for the inject_stats property
+        self.relationship = 0
+
+    def add_relationship(self, pos_rel):
+        self.relationship += pos_rel
+
+    def minus_relationship(self, neg_rel):
+        self.relationship -= neg_rel
+
+    # def relationship_status(self):
 
     def add_calories(self, calories):
         self.current_calories += calories
@@ -77,18 +90,18 @@ class CharacterStats:
 
     def calculate_fullness(self):
         # Calculate the percentage of max_calories consumed
-        fullness_percentage = (self.current_calories / self.max_calories) * 100
+        self.fullness_percentage = (self.current_calories / self.max_calories) * 100
 
         # Determine fullness category
-        if fullness_percentage <= 20:
+        if self.fullness_percentage <= 20:
             return "Starving"
-        elif fullness_percentage <= 40:
+        elif self.fullness_percentage <= 40:
             return "Hungry"
-        elif fullness_percentage <= 60:
+        elif self.fullness_percentage <= 60:
             return "Content"
-        elif fullness_percentage <= 80:
+        elif self.fullness_percentage <= 80:
             return "Satiated"
-        elif fullness_percentage <= 100:
+        elif self.fullness_percentage <= 100:
             return "Stuffed"
         else:
             return "Overfed"
@@ -114,19 +127,19 @@ class CharacterStats:
         shirt_index = max(0, min(len(self.SHIRT_SIZES) - 1, self.weight_diff // 30))
         self.shirt_size = self.SHIRT_SIZES[int(shirt_index)]
         if self.weight_diff % 20 <= 10:
-            self.shirt_fit = "Loose Fit"
+            self.shirt_fit = "Relaxed Fit"
         elif self.weight_diff % 20 <= 15:
-            self.shirt_fit = "Standard Fit"
+            self.shirt_fit = "Snug Fit"
         else:
             self.shirt_fit = "Tight Fit"
 
         # Update pant size and fit
         self.pant_size = 14 + (
-                    max(0, self.weight_diff // 20) * 2)  # Start from size 14 and increment by 2 for every 15 lbs
+                max(0, self.weight_diff // 20) * 2)  # Start from size 14 and increment by 2 for every 15 lbs
         if self.weight_diff % 20 <= 5:
-            self.pant_fit = "Loose Fit"
+            self.pant_fit = "Relaxed Fit"
         elif self.weight_diff % 20 <= 10:
-            self.pant_fit = "Standard Fit"
+            self.pant_fit = "Snug Fit"
         else:
             self.pant_fit = "Tight Fit"
 
@@ -140,7 +153,7 @@ class CharacterStats:
 
     def set_age(self):
         age = self.current_date.year - self.birthday.year - (
-                    (self.current_date.month, self.current_date.day) < (self.birthday.month, self.birthday.day))
+                (self.current_date.month, self.current_date.day) < (self.birthday.month, self.birthday.day))
         self.age = age
         self.max_calories = self.calculate_bmr()
         return age
@@ -151,7 +164,8 @@ class CharacterStats:
     def set_date(self, new_date):
         self.current_date = datetime.datetime.strptime(new_date, '%Y-%m-%d')
 
-    def override_stats(self, name, start_weight, weight, height_inches, current_calories, current_year, current_month, current_day, start_year, start_month, start_day, birthday_year, birthday_month, birthday_day):
+    def override_stats(self, name, start_weight, weight, height_inches, current_calories, current_year, current_month,
+                       current_day, start_year, start_month, start_day, birthday_year, birthday_month, birthday_day):
         self.name = name
         self.start_weight = start_weight
         self.weight = weight
@@ -166,8 +180,115 @@ class CharacterStats:
         self.calculate_bmi()
         self.fullness = self.calculate_fullness()
 
+    def reset_stats(self):
+        self.age = 19
+        self.name = "Maddy"
+        self.weight = 170
+        self.start_weight = 170
+        self.height_inches = 67
+        self.current_calories = 0
+        self.max_calories = self.calculate_bmr()
+        self.fullness = self.calculate_fullness()
+        self.fullness_percentage = 0
+        self.current_date = datetime.datetime(2016, 6, 15)
+        self.start_date = datetime.datetime(2016, 6, 15)
+        self.update_clothing_sizes()
+        self.birthday = datetime.datetime(1997, 2, 23)
+        self.inject_stats = False
+        self.relationship = 0
+
 
 character_stats = CharacterStats()
+
+# Define a function to get the base64 string of the image
+def get_image_base64(image_path):
+    with Image.open(image_path) as image:
+        buffered = io.BytesIO()
+        image.save(buffered, format="PNG")  # Or the appropriate format of your image
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+    return img_str
+
+
+def sentiment_code(label):
+    match label:
+        case "admiration" | "approval" | "gratitude" | "optimism" | "pride":
+            # Positive emotions
+            emotion_number = 1
+        case "amusement" | "curiosity" | "excitement" | "joy" | "love":
+            # Happy/excited emotions
+            emotion_number = 2
+        case "anger" | "annoyance" | "disapproval" | "disgust":
+            # Negative/angry emotions
+            emotion_number = 3
+        case "caring" | "desire":
+            # Caring/desire emotions
+            emotion_number = 4
+        case "confusion" | "realization":
+            # Thoughtful/reflective emotions
+            emotion_number = 5
+        case "disappointment" | "embarrassment" | "grief" | "remorse" | "sadness":
+            # Sad/sorrowful emotions
+            emotion_number = 6
+        case "fear" | "nervousness":
+            # Fear/anxiety emotions
+            emotion_number = 7
+        case "relief" | "surprise":
+            # Surprise/relief emotions
+            emotion_number = 8
+        case "neutral":
+            # Neutral emotion
+            emotion_number = 9
+        case _:
+            # Handle any other value
+            emotion_number = 0
+    return emotion_number
+
+def get_image_path(code):
+    number = character_stats.weight - character_stats.start_weight
+    fullness = character_stats.fullness_percentage
+
+    # Limit the image index to the range of available images (0 to 250)
+    weight_index = min(max(number, 0), 250)
+
+    # Determine the fullness index based on the percentage range
+    if fullness <= 49:
+        fullness_index = 0
+    elif fullness <= 99:
+        fullness_index = 1
+    else:
+        fullness_index = 2
+
+    filename = f'fiona_{int(weight_index)}_{int(fullness_index)}_{code}.png'
+    file_path = os.path.join(images_dir, filename)
+    print(file_path)
+
+    # Check if the file exists before returning the path
+    if os.path.exists(file_path):
+        file_path = file_path.replace('\\', '/').replace('static/', '')
+        print(file_path)
+        return file_path
+    else:
+        # Handle the case where no image is available or the path is incorrect
+        print("No image available for the current weight.")
+        # Return a default image or a placeholder
+        return os.path.join(images_dir, 'default.png')
+
+def output_modifier(string, state, is_chat=False):
+
+    # preforms sentimentanlysis on the inference
+    response = model(f"{string}")
+    label = response[0]['label']
+    emotion_code = sentiment_code(str(label))
+
+    # Embeds image into response
+    image_path = get_image_path(int(emotion_code))
+    print(image_path)
+    height = 500
+    width = int(height * 0.463)
+    image_base64 = get_image_base64(image_path)
+    string = f"<img src='data:image/png;base64,{image_base64}' style='max-width: {width}px; max-height: {height}px; width: auto; height: auto; display: block; margin-left: auto; margin-right: auto;'/><br>{string}"
+
+    return string
 
 def override_stats(
         name, start_weight, weight, height_inches, current_calories,
@@ -195,12 +316,14 @@ def override_stats(
     )
     return "Stats successfully updated!"
 
+
 def inches_to_feet_and_inches(inches):
     feet = inches // 12
     remaining_inches = inches % 12
     return int(feet), int(remaining_inches)
 
 def input_modifier(string, state, is_chat=False):
+
     if is_chat:
         if "==END_DAY==" in string:
             character_stats.end_day()
@@ -219,17 +342,19 @@ def input_modifier(string, state, is_chat=False):
 
     return string
 
+
 def stat_prompt():
     feet, inches = inches_to_feet_and_inches(character_stats.height_inches)
     stats_context = (
         f"""
         [Today's date is {character_stats.formatted_date()}.]
-        
+
         [{character_stats.name}'s Stats:
         {character_stats.name} is now {character_stats.age} years old, {feet}'{inches} inches tall, and currently weighs {character_stats.weight} lbs.
         Her BMI is {character_stats.calculate_bmi()} and she has gained {int(character_stats.weight_diff)} lbs since {character_stats.start_date.strftime('%B %d, %Y')}.
         So far she has consumed {int(character_stats.current_calories)} out of {character_stats.max_calories} calories today, leaving her feeling {character_stats.calculate_fullness()}.
-        She currently wears a sized {character_stats.shirt_size} shirt, and has a pant size of {character_stats.pant_size} US women's.]
+        She currently wears a sized {character_stats.shirt_size} shirt, which is a {character_stats.shirt_fit}.
+        She has a pant size of {character_stats.pant_size} US women's, which are a {character_stats.pant_fit}.]
         """
     )
     return stats_context
@@ -291,6 +416,7 @@ def chat_input_modifier(text, visible_text, state):
 
     return text, visible_text
 
+
 def ui():
     with gr.Blocks() as demo:
         with gr.Accordion(label="Character Stats", open=True):
@@ -303,6 +429,7 @@ def ui():
                 label="Inject Stats Into Prompt",
                 value=charUI_stats['stat_prompt']
             )
+
             def set_inject_stats(inject):
                 character_stats.set_inject_stats(inject)
 
@@ -387,6 +514,8 @@ def ui():
         )
 
     return demo
+
+
 # Launch the Gradio UI
 if __name__ == "__main__":
     ui = ui()
