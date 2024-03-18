@@ -1,0 +1,9 @@
+#~/.bash_profile
+
+cd ~/workspace/text-generation-webui
+bash start_linux.sh
+pip install flash-attn==2.3
+pip install xformers==0.0.21
+pip install exllama==0.1.0
+pip uninstall -y exllamav2
+pip install exllamav2
