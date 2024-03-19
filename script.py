@@ -15,7 +15,7 @@ if modules_path not in sys.path:
 
 from chat import generate_chat_prompt
 
-model = pipeline(model="seara/rubert-base-cased-ru-go-emotions")
+sentimentModel = pipeline(model="seara/rubert-tiny2-ru-go-emotions")
 
 # extension parameters
 params = {
@@ -63,15 +63,6 @@ class CharacterStats:
         self.update_clothing_sizes()
         self.birthday = datetime.datetime(1997, 2, 23)
         self.inject_stats = False  # Default value for the inject_stats property
-        self.relationship = 0
-
-    def add_relationship(self, pos_rel):
-        self.relationship += pos_rel
-
-    def minus_relationship(self, neg_rel):
-        self.relationship -= neg_rel
-
-    # def relationship_status(self):
 
     def add_calories(self, calories):
         self.current_calories += calories
@@ -276,7 +267,8 @@ def get_image_path(code):
 def output_modifier(string, state, is_chat=False):
 
     # preforms sentimentanlysis on the inference
-    response = model(f"{string}")
+    print("DEBUG:::::" + string)
+    response = sentimentModel(f"{string}")
     label = response[0]['label']
     emotion_code = sentiment_code(str(label))
 
@@ -434,16 +426,16 @@ def ui():
                 character_stats.set_inject_stats(inject)
 
             char_name = gr.Textbox(
-                label="Character Name",
+                label=f"Character Name",
                 value=charUI_stats['char_name'],
                 placeholder="Enter your character's name here..."
             )
             starting_weight = gr.Number(
-                label="Character Starting Weight",
+                label=f"Character Starting Weight",
                 value=charUI_stats['char_weight']
             )
             char_weight = gr.Number(
-                label="Character Current Weight",
+                label=f"Character Current Weight",
                 value=charUI_stats['char_weight']
             )
             char_calories = gr.Number(
