@@ -1,7 +1,7 @@
 import datetime, re, os, sys, io, base64, hashlib, json
 import gradio as gr
 from PIL import Image
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 # Find the path to the 'modules' directory relative to the current file
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +15,8 @@ if modules_path not in sys.path:
 
 from chat import generate_chat_prompt
 
-sentimentModel = pipeline(model="seara/rubert-tiny2-ru-go-emotions")
+model = AutoModelForSequenceClassification.from_pretrained("hakonmh/sentiment-xdistil-uncased")
+tokenizer = AutoTokenizer.from_pretrained("hakonmh/sentiment-xdistil-uncased")
 
 # extension parameters
 params = {
@@ -202,31 +203,13 @@ def get_image_base64(image_path):
 
 def sentiment_code(label):
     match label:
-        case "admiration" | "approval" | "gratitude" | "optimism" | "pride":
+        case "Positive":
             # Positive emotions
             emotion_number = 1
-        case "amusement" | "curiosity" | "excitement" | "joy" | "love":
-            # Happy/excited emotions
-            emotion_number = 2
-        case "anger" | "annoyance" | "disapproval" | "disgust":
+        case "Negative":
             # Negative/angry emotions
             emotion_number = 3
-        case "caring" | "desire":
-            # Caring/desire emotions
-            emotion_number = 4
-        case "confusion" | "realization":
-            # Thoughtful/reflective emotions
-            emotion_number = 5
-        case "disappointment" | "embarrassment" | "grief" | "remorse" | "sadness":
-            # Sad/sorrowful emotions
-            emotion_number = 6
-        case "fear" | "nervousness":
-            # Fear/anxiety emotions
-            emotion_number = 7
-        case "relief" | "surprise":
-            # Surprise/relief emotions
-            emotion_number = 8
-        case "neutral":
+        case "Neutral":
             # Neutral emotion
             emotion_number = 9
         case _:
@@ -267,10 +250,11 @@ def get_image_path(code):
 def output_modifier(string, state, is_chat=False):
 
     # preforms sentimentanlysis on the inference
-    print("DEBUG:::::" + string)
-    response = sentimentModel(f"{string}")
-    label = response[0]['label']
-    emotion_code = sentiment_code(str(label))
+    SENTENCE = string
+    inputs = tokenizer(SENTENCE, return_tensors="pt")
+    output = model(**inputs).logits
+    predicted_label = model.config.id2label[output.argmax(-1).item()]
+    emotion_code = sentiment_code(str(predicted_label))
 
     # Embeds image into response
     image_path = get_image_path(int(emotion_code))
