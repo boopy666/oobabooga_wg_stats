@@ -1,7 +1,7 @@
 import datetime, re, os, sys, io, base64, hashlib, json
 import gradio as gr
 from PIL import Image
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+#from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 # Find the path to the 'modules' directory relative to the current file
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -15,35 +15,8 @@ if modules_path not in sys.path:
 
 from chat import generate_chat_prompt
 
-model = AutoModelForSequenceClassification.from_pretrained("hakonmh/sentiment-xdistil-uncased")
-tokenizer = AutoTokenizer.from_pretrained("hakonmh/sentiment-xdistil-uncased")
-
-# extension parameters
-params = {
-    "display_name": "Character Stats",
-    "is_tab": False
-}
-
-# Initialize the extension state
-charUI_stats = {
-    "inject": False,
-    "char_name": "Maddy",
-    "starting_weight": 170,
-    "char_weight": 170,
-    "char_calories": 0,
-    "char_height": 67,
-    "char_birth_year": 1997,
-    "char_birth_month": 2,
-    "char_birth_day": 23,
-    "start_year": 2016,
-    "start_month": 6,
-    "start_day": 15,
-    "current_year": 2016,
-    "current_month": 6,
-    "current_day": 15,
-    "stat_prompt": False
-}
-
+#model = AutoModelForSequenceClassification.from_pretrained("hakonmh/sentiment-xdistil-uncased")
+#tokenizer = AutoTokenizer.from_pretrained("hakonmh/sentiment-xdistil-uncased")
 
 class CharacterStats:
     SHIRT_SIZES = ["Medium", "Large", "X-Large", "2XL", "3XL", "4XL", "5XL", "6XL", "7XL", "8XL", "9XL", "10XL",
@@ -59,10 +32,10 @@ class CharacterStats:
         self.max_calories = self.calculate_bmr()
         self.fullness = self.calculate_fullness()
         self.fullness_percentage = 0
-        self.current_date = datetime.datetime(2016, 6, 15)
-        self.start_date = datetime.datetime(2016, 6, 15)
+        self.current_date = datetime.datetime(2023, 9, 3)
+        self.start_date = datetime.datetime(2023, 6, 15)
         self.update_clothing_sizes()
-        self.birthday = datetime.datetime(1997, 2, 23)
+        self.birthday = datetime.datetime(2004, 5, 16)
         self.inject_stats = False  # Default value for the inject_stats property
 
     def add_calories(self, calories):
@@ -175,14 +148,14 @@ class CharacterStats:
     def reset_stats(self):
         self.age = 19
         self.name = "Maddy"
-        self.weight = 170
-        self.start_weight = 170
+        self.weight = 150
+        self.start_weight = 150
         self.height_inches = 67
         self.current_calories = 0
         self.max_calories = self.calculate_bmr()
         self.fullness = self.calculate_fullness()
         self.fullness_percentage = 0
-        self.current_date = datetime.datetime(2016, 6, 15)
+        self.current_date = datetime.datetime(2023, 9, 3)
         self.start_date = datetime.datetime(2016, 6, 15)
         self.update_clothing_sizes()
         self.birthday = datetime.datetime(1997, 2, 23)
@@ -191,6 +164,32 @@ class CharacterStats:
 
 
 character_stats = CharacterStats()
+
+# extension parameters
+params = {
+    "display_name": "Character Stats",
+    "is_tab": False
+}
+
+# Initialize the extension state
+charUI_stats = {
+    "inject": False,
+    "char_name": character_stats.name,
+    "starting_weight": character_stats.start_weight,
+    "char_weight": character_stats.start_weight,
+    "char_calories": 0,
+    "char_height": 67,
+    "char_birth_year": character_stats.birthday_year,
+    "char_birth_month": character_stats.birthday_month,
+    "char_birth_day": character_stats.birthday_day,
+    "start_year": character_stats.start_year,
+    "start_month": character_stats.start_month,
+    "start_day": character_stats.start_day,
+    "current_year": character_stats.current_year
+    "current_month": character_stats.current_month,
+    "current_day": charadter_stats.current_day,
+    "stat_prompt": False
+}
 
 # Define a function to get the base64 string of the image
 def get_image_base64(image_path):
@@ -249,15 +248,17 @@ def get_image_path(code):
 
 def output_modifier(string, state, is_chat=False):
 
+    '''
     # preforms sentimentanlysis on the inference
     SENTENCE = string
     inputs = tokenizer(SENTENCE, return_tensors="pt")
     output = model(**inputs).logits
     predicted_label = model.config.id2label[output.argmax(-1).item()]
     emotion_code = sentiment_code(str(predicted_label))
+    '''
 
     # Embeds image into response
-    image_path = get_image_path(int(emotion_code))
+    image_path = get_image_path(int(9))
     print(image_path)
     height = 500
     width = int(height * 0.463)
