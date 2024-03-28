@@ -25,15 +25,15 @@ params = {
 charUI_stats = {
     "inject": False,
     "char_name": "Maddy",
-    "starting_weight": 170,
+    "starting_weight": 145,
     "char_weight": 170,
     "char_calories": 0,
     "char_height": 67,
     "char_birth_year": 1997,
     "char_birth_month": 5,
     "char_birth_day": 13,
-    "start_year": 2016,
-    "start_month": 9,
+    "start_year": 2014,
+    "start_month": 6,
     "start_day": 2,
     "current_year": 2016,
     "current_month": 9,
@@ -114,7 +114,7 @@ class CharacterStats:
         shirt_index = max(0, min(len(self.SHIRT_SIZES) - 1, self.weight_diff // 30))
         self.shirt_size = self.SHIRT_SIZES[int(shirt_index)]
         if self.weight_diff % 20 <= 10:
-            self.shirt_fit = "Loose Fit"
+            self.shirt_fit = "Relaxed Fit"
         elif self.weight_diff % 20 <= 15:
             self.shirt_fit = "Standard Fit"
         else:
@@ -124,7 +124,7 @@ class CharacterStats:
         self.pant_size = 14 + (
                     max(0, self.weight_diff // 20) * 2)  # Start from size 14 and increment by 2 for every 15 lbs
         if self.weight_diff % 20 <= 5:
-            self.pant_fit = "Loose Fit"
+            self.pant_fit = "Relaxed Fit"
         elif self.weight_diff % 20 <= 10:
             self.pant_fit = "Standard Fit"
         else:
